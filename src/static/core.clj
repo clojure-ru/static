@@ -351,10 +351,15 @@
 ;; Create Archive For Year
 ;;
 
-(defn write-posts-by-year [meta [year year-group]]
-  (write-out-dir (str year "/index.html") (template [meta [[year year-group]]])))
+(defn write-posts-by-month [meta year [month month-group]]
+  (write-out-dir (str year "/" month "/index.html") (template [meta [[month month-group]]])))
 
-(defn create-archives-for-year []
+(defn write-posts-by-year-and-month [meta [year year-group]]
+  (let [grouped (vec (into (sorted-map) ((group-by :month year-group))))]
+   (do (write-out-dir (str year "/index.html") (template [meta [[year year-group]]]))
+       (dorun (map #(write-posts-by-month meta year %) grouped)))))
+
+(defn create-archives-for-year-and-month []
   (let [files (map create-post-meta (list-files :posts)) 
         sorted (reverse (sort-by :javadate files))
         annotated (map (fn [d] (let [[_ year month & rest] (clojure.string/split (:url d) #"/")]
@@ -363,7 +368,7 @@
         meta (enhance-metadata {:title (:archives-title (config))
                                 :template (:list-template (config))
                                 :type :news-archive})]
-    (dorun (map #(write-posts-by-year meta %) grouped))))
+    (dorun (map #(write-posts-by-year-and-month meta %) grouped))))
 
 ;;
 ;; Create Archive Pages.
@@ -517,7 +522,7 @@
       (when (:create-archives (config))
         (log-time-elapsed "Creating Archives " (create-archives-one-page)))
 
-      (log-time-elapsed "Creating Archives by Year" (create-archives-for-year)) 
+      (log-time-elapsed "Creating Archives by Year" (create-archives-for-year-and-month)) 
       
       (log-time-elapsed "Creating Sitemap " (create-sitemap))
       (log-time-elapsed "Creating Aliases " (create-aliases))
