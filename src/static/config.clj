@@ -12,12 +12,14 @@
                 :site-author ""
                 :in-dir "resources/"
                 :out-dir "html/"
+                :post-dir "archives/"
                 :default-template "default.clj"
                 :list-template "list.clj"
                 :base-template "base.clj"
                 :default-extension "html"
                 :encoding "UTF-8"
                 :posts-per-page 2
+                :number-of-recent-posts 10
                 :blog-as-index true
                 :create-archives true
                 :archives-title "Archives"

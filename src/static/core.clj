@@ -131,7 +131,12 @@
      :javadate (javadate-from-file f)
      :footnotes (:footnotes metadata)
      :id (hash url)
-     :tags (:tags metadata)}))
+     :tags (:tags metadata)
+     :description (or (:description metadata) "")}))
+
+(defn recent-posts-sidebar []
+  (let [posts (take (:number-of-recent-posts (config)) (reverse (list-files :posts)))]
+    (map #(create-post-meta %) posts)))
 
 (defn enhance-metadata
   "enhance the given metadata with additional information
@@ -370,7 +375,7 @@
         grouped (reverse (vec (into (sorted-map) (group-by :year annotated))))
         meta (enhance-metadata {:title (:archives-title (config))
                                 :template (:list-template (config))})]
-    (write-out-dir (str "archives/index.html") (template [meta grouped]))))
+    (write-out-dir (str (:post-dir (config)) "index.html") (template [meta grouped]))))
 
 (defn create-archives-by-month
   "Create and write archive pages.
@@ -380,14 +385,14 @@
   (let [meta (enhance-metadata {:title (:archives-title (config)) :template (:list-template (config))})
         content (map (fn [[mount count]]
                        {:title (str (parse-date "yyyy-MM" (:date-format-archive (config)) mount) "(" count ")") 
-                        :url (str "/archives/" (.replace mount "-" "/") "/")
+                        :url (str (:post-dir (config)) (.replace mount "-" "/") "/")
                         :date (parse-date "yyyy-MM" (:date-format-archive (config)) mount)
                         :content (str count)
                         :id (hash mount)
                         :keywords []
                         :footnotes []}
                        ) (post-count-by-mount))]
-    (write-out-dir (str "archives/index.html") (template [meta content])))
+    (write-out-dir (str (:post-dir (config)) "index.html") (template [meta content])))
   
   ;;create a page for each month.
   (dorun
@@ -402,7 +407,7 @@
             content (map create-post-meta posts)]
         ;(println "content" content)
         (write-out-dir
-         (str "archives/" (.replace month "-" "/") "/index.html")
+         (str (:post-dir (config)) (.replace month "-" "/") "/index.html")
          (template [metadata content]))))
     (keys (post-count-by-mount)))))
 
