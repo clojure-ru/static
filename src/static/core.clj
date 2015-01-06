@@ -351,13 +351,19 @@
 ;; Create Archive For Year
 ;;
 
+(defn format-date [out-format date]
+  (.format (SimpleDateFormat. out-format) date))
+
 (defn write-posts-by-month [meta year [month month-group]]
-  (write-out-dir (str year "/" month "/index.html") (template [meta [[month month-group]]])))
+  (let [mon (format-date "MMMM" (:javadate (first month-group)))
+        meta (assoc meta :title (str mon " " (:title meta)))]
+    (write-out-dir (str year "/" month "/index.html") (template [meta [[year month-group]]]))))
 
 (defn write-posts-by-year-and-month [meta [year year-group]]
-  (let [grouped (vec (into (sorted-map) ((group-by :month year-group))))]
+  (let [grouped (vec (into (sorted-map) (group-by :month year-group)))
+        meta (assoc meta :title year)]
    (do (write-out-dir (str year "/index.html") (template [meta [[year year-group]]]))
-       (dorun (map #(write-posts-by-month meta year %) grouped)))))
+       (dorun (map #(write-posts-by-month (assoc meta :type :month-news) year %) grouped)))))
 
 (defn create-archives-for-year-and-month []
   (let [files (map create-post-meta (list-files :posts)) 
@@ -365,9 +371,9 @@
         annotated (map (fn [d] (let [[_ year month & rest] (clojure.string/split (:url d) #"/")]
                                  (assoc d :year year :month month))) sorted)
         grouped (reverse (vec (into (sorted-map) (group-by :year annotated))))
-        meta (enhance-metadata {:title (:archives-title (config))
+        meta (enhance-metadata {:title (:news-title (config))
                                 :template (:list-template (config))
-                                :type :news-archive})]
+                                :type :year-news})]
     (dorun (map #(write-posts-by-year-and-month meta %) grouped))))
 
 ;;
@@ -452,6 +458,15 @@
                     [:meta {:http-equiv "content-type" :content "text/html; charset=utf-8"}]
                     [:meta {:http-equiv "refresh" :content (str "0;url=" (post-url file))}]]])))))))
 
+(defn create-examples []
+  (let [files (list-files :examples)]
+    (doall (map 
+             (fn [f]
+               (let [[_ c] (read-doc f)
+                     name (FilenameUtils/getBaseName (str f))]
+                 (write-out-dir (str "examples/" name "/index.html") (force c))))
+             files))))
+
 (defn process-posts 
   "Create and write post pages."
   []
@@ -488,6 +503,11 @@
         (FileUtils/copyDirectoryToDirectory f out-dir))
       )))
 
+(defn process-index []
+  (let [content (map #(create-post-meta %) (list-files :posts))
+        meta (enhance-metadata (assoc metadata :template (:index-template (config))))]
+   (write-out-dir "index.html" (template [meta content]))))
+
 (defn load-base-template
   "load the base template, that contains template defaults"
   []
@@ -518,14 +538,17 @@
       (log-time-elapsed "Processing Posts " (process-posts))
       (log-time-elapsed "Creating RSS " (create-rss))
       (log-time-elapsed "Creating Tags " (create-tags))
-      
+      (when (:generate-index (config))
+        (log-time-elapsed "Processing Index Page " (process-index)))
+            
       (when (:create-archives (config))
         (log-time-elapsed "Creating Archives " (create-archives-one-page)))
 
-      (log-time-elapsed "Creating Archives by Year" (create-archives-for-year-and-month)) 
+      (log-time-elapsed "Creating Archives by Year " (create-archives-for-year-and-month)) 
       
       (log-time-elapsed "Creating Sitemap " (create-sitemap))
       (log-time-elapsed "Creating Aliases " (create-aliases))
+      (log-time-elapsed "Creating Examples " (create-examples))
 
       (when (:blog-as-index (config)) 
         ; Create the latest-post archives, i.e. create a index.html with n posts

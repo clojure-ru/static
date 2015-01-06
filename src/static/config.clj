@@ -13,6 +13,8 @@
                 :in-dir "resources/"
                 :out-dir "html/"
                 :post-dir "archives/"
+                :generate-index true
+                :index-template "index.clj"
                 :default-template "default.clj"
                 :list-template "list.clj"
                 :base-template "base.clj"
@@ -22,6 +24,7 @@
                 :number-of-recent-posts 10
                 :blog-as-index true
                 :create-archives true
+                :news-title "Recent News"
                 :archives-title "Archives"
                 :archives-title-month " - %s" ; for the individual month
                 :date-format-post "E, d MMM yyyy" ; the output dateformat for posts

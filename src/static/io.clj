@@ -68,7 +68,7 @@
     ;(System/exit 0)
     [(assoc (prepare-metadata metadata) :footnotes footnotes)
      ;(delay (.markdownToHtml (PegDownProcessor. org.pegdown.Extensions/TABLES) content))
-     (delay (.markdownToHtml (PegDownProcessor. (int (bit-or org.pegdown.Extensions/TABLES org.pegdown.Extensions/SMARTYPANTS org.pegdown.Extensions/AUTOLINKS org.pegdown.Extensions/FENCED_CODE_BLOCKS))) content))
+     (delay (.markdownToHtml (PegDownProcessor. (int (bit-or org.pegdown.Extensions/TABLES org.pegdown.Extensions/SMARTYPANTS org.pegdown.Extensions/AUTOLINKS org.pegdown.Extensions/FENCED_CODE_BLOCKS org.pegdown.Extensions/HARDWRAPS))) content))
 
      ]))
 
@@ -130,6 +130,7 @@
         (= dir :public) (str (:in-dir (config)) "public/")
         (= dir :site) (str (:in-dir (config)) "site/")
         (= dir :posts) (str (:in-dir (config)) "posts/")
+        (= dir :examples) (str (:in-dir (config)) "examples/")
         :default (throw (Exception. "Unknown Directory."))))
 
 (defn list-files [d]
