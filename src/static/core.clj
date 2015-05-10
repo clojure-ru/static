@@ -289,6 +289,7 @@
                 metadata {
                           :title (str (:site-title (config)) (format (:site-title-tag (config)) tag))
                           :template (:list-template (config))
+                          :type :posts-for-tag
                           :description (:site-description (config))
                           }
                 enhanced-meta (enhance-metadata metadata)
