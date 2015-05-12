@@ -131,7 +131,7 @@
      :javadate (javadate-from-file f)
      :footnotes (:footnotes metadata)
      :id (hash url)
-     :tags (:tags metadata)
+     :tags (map #(hash-map :title %1 :url (url-for-tag %1)) (clojure.string/split (:tags metadata) #",? "))
      :description (or (:description metadata) "")}))
 
 (defn recent-posts-sidebar []
@@ -148,7 +148,7 @@
                         (if (string? tags) (clojure.string/split tags #" " ) tags)))
         page-tags (tagfn (str (:tags m) " " (:keywords m)))
         site-tags (tagfn (:site-default-keywords (static.config/config)))
-        merge-tags (vec (into #{} (if (> (count page-tags) 0) (apply conj site-tags page-tags) site-tags )))
+        merge-tags (vec (into #{} (if (> (count page-tags) 0) (apply conj site-tags page-tags) site-tags)))
         tagstring (clojure.string/join ", " merge-tags)]
     ; update with default-values for non-existing
     ; keywords are the combination of the site keywords and the site/post specific keywords
@@ -263,7 +263,7 @@
    (fn[h v]
      (let [[metadata] (read-doc v)
            info [(post-url v) (:title metadata) v]
-           tags (.split (:tags metadata) " ")]
+           tags (clojure.string/split (:tags metadata) #",? ")]
        (reduce 
         (fn[m p] 
           (let [[tag info] p] 
@@ -287,7 +287,7 @@
    (map (fn [t]
           (let [[tag posts] t
                 metadata {
-                          :title (str (:site-title (config)) (format (:site-title-tag (config)) tag))
+                          :title (str #_(:site-title (config)) (format (:site-title-tag (config)) tag))
                           :template (:list-template (config))
                           :type :posts-for-tag
                           :description (:site-description (config))
